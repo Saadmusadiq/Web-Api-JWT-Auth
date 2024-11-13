@@ -1,0 +1,6 @@
+@webapic__HostAddress = http://localhost:5182
+
+GET {{webapic__HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
