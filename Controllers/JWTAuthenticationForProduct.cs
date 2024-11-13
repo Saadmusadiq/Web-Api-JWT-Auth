@@ -7,6 +7,9 @@ using System.Text;
 using JWTAuthenticationForProduct.Models;
 using System.Net;
 using webapic_.Services;
+using System.Collections.Concurrent;
+
+
 
 namespace JWTAuthenticationForProduct.Controllers
 {
@@ -16,11 +19,13 @@ namespace JWTAuthenticationForProduct.Controllers
     public class LoginController : ControllerBase
     {
         private IConfiguration _config;
+        private readonly IJwtBlacklistService _jwtBlacklistService;
 
-        public LoginController(IConfiguration config)
+        public LoginController(IConfiguration config, IJwtBlacklistService jwtBlacklistService)
         {
 
             _config = config;
+            _jwtBlacklistService = jwtBlacklistService;
         }
 
         [AllowAnonymous]
@@ -79,16 +84,33 @@ namespace JWTAuthenticationForProduct.Controllers
 
         }
 
+        private static ConcurrentDictionary<string, bool> _tokenBlacklist = new();
+
+
         [Authorize]
         [HttpPost]
+
         public IActionResult Logout()
         {
+            /*var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
+            if (authHeader.StartsWith("Bearer "))
+            {
+                var token = authHeader.Substring("Bearer ".Length).Trim();
+                _tokenBlacklist.TryAdd(token, true);
+                return Ok(new { message = "User logged out successfully." });
+            }
+            return BadRequest(new { message = "Invalid token format." });*/
             var token = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-            _tokenBlacklist.TryAdd(token, true);
-            return Ok(new { message = "User logged out successfully." });
-        }
 
-        private bool IsTokenBlacklisted(string token)
+            if (!string.IsNullOrEmpty(token))
+            {
+                _jwtBlacklistService.BlacklistToken(token);
+            }
+
+            return Ok("Logged out successfully");
+        }
+      
+        /*private bool IsTokenBlacklisted(string token)
         {
             return _tokenBlacklist.ContainsKey(token);
         }
@@ -105,7 +127,7 @@ namespace JWTAuthenticationForProduct.Controllers
             }
 
             return Ok(new { message = "This is a protected endpoint." });
-        }
+        }*/
     }
 
 }

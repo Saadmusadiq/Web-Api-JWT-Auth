@@ -1,16 +1,29 @@
-﻿
-namespace JWTAuthenticationForProduct.Controllers
-{
-    internal class _tokenBlacklist
+﻿    using System;
+    using System.Collections.Concurrent;
+
+    namespace JWTAuthenticationForProduct.Controllers
     {
-        internal static bool ContainsKey(string token)
+    public interface IJwtBlacklistService
+    {
+        void BlacklistToken(string token);
+        bool IsTokenBlacklisted(string token);
+    }
+
+    public class JwtBlacklistService : IJwtBlacklistService
+    {
+        private readonly HashSet<string> _blacklistedTokens = new();
+
+        public void BlacklistToken(string token)
         {
-            throw new NotImplementedException();
+            _blacklistedTokens.Add(token);
         }
 
-        internal static void TryAdd(string token, bool v)
+        public bool IsTokenBlacklisted(string token)
         {
-            throw new NotImplementedException();
+            return _blacklistedTokens.Contains(token);
         }
     }
+
 }
+
+
